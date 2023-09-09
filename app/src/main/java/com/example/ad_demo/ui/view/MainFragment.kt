@@ -5,7 +5,6 @@ import android.graphics.Insets
 import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,16 +12,29 @@ import android.view.WindowInsets
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.ad_demo.data.repository.AdRepositoryImpl
 import com.example.ad_demo.databinding.FragmentMainBinding
+import com.example.ad_demo.network.ApiService
+import com.example.ad_demo.network.AppClientManager
 import com.example.ad_demo.ui.adapter.ItemAdapter
 import com.example.ad_demo.ui.viewmodel.MainViewModel
-import com.example.ad_demo.utils.ViewHolderType
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import com.example.ad_demo.utils.Status
 
 class MainFragment : Fragment() {
 
     private lateinit var binding: FragmentMainBinding
-    private val adViewModel by viewModel<MainViewModel>()
+    private lateinit var adViewModel: MainViewModel
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        adViewModel = MainViewModel(
+            AdRepositoryImpl(
+                AppClientManager.creteRestfulApiClient().create(
+                    ApiService::class.java
+                )
+            )
+        )
+
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,15 +51,6 @@ class MainFragment : Fragment() {
         binding.dataList.layoutManager = linearLayoutManager
         val adapter = ItemAdapter()
         binding.dataList.adapter = adapter
-        val list = arrayListOf<ViewHolderType>()
-        for (i in 0..100) {
-            if (i == 20) {
-                list.add(ViewHolderType.Ad("www.google.com"))
-            } else {
-                list.add(ViewHolderType.Content(i.toString()))
-            }
-        }
-        adapter.submitList(list)
         binding.dataList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
@@ -55,15 +58,33 @@ class MainFragment : Fragment() {
                     val v = linearLayoutManager.findViewByPosition(20)
                     val rect = intArrayOf(0, 0)
                     v?.getLocationOnScreen(rect)
-                    Log.d(
-                        "@@",
-                        v?.measuredHeight.toString() + " view y:${rect[1]} height:${
-                            getScreenHeight(aty)
-                        }"
-                    )
+//                    Log.d(
+//                        "@@",
+//                        v?.measuredHeight.toString() + " view y:${rect[1]} height:${
+//                            getScreenHeight(aty)
+//                        }"
+//                    )
                 }
             }
         })
+        with(adViewModel) {
+            fetchNews().observe(viewLifecycleOwner) {
+                when (it.status) {
+                    Status.SUCCESS -> {
+                        binding.progressBar.visibility = View.GONE
+                        adapter.submitList(it.data)
+                    }
+
+                    Status.LOADING -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                    }
+
+                    Status.ERROR -> {
+                        binding.progressBar.visibility = View.GONE
+                    }
+                }
+            }
+        }
     }
 
     private fun getScreenHeight(activity: Activity): Int {

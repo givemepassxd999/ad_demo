@@ -10,7 +10,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 
 object AppClientManager {
-    //處理 Restful api log
     private var restfulLogging = HttpLoggingInterceptor { message ->
         Log.i(
             "restful interceptor_msg",

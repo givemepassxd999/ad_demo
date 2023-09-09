@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ad_demo</string>
+    <string name="img_desc">image desc</string>
 </resources>

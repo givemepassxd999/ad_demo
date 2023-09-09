@@ -7,11 +7,12 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.example.ad_demo.databinding.AdItemBinding
+import com.example.ad_demo.databinding.ContentItemBinding
 import com.example.ad_demo.utils.ViewHolderType
 import com.example.ad_demo.utils.ViewHolderType.Companion.AD
 import com.example.ad_demo.utils.ViewHolderType.Companion.CONTENT
-import com.example.ad_demo.databinding.AdItemBinding
-import com.example.ad_demo.databinding.ContentItemBinding
 
 class ItemAdapter : ListAdapter<ViewHolderType, RecyclerView.ViewHolder>(DiffCallback()) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -71,6 +72,9 @@ class ItemAdapter : ListAdapter<ViewHolderType, RecyclerView.ViewHolder>(DiffCal
 
         @SuppressLint("CheckResult", "SetTextI18n")
         fun bind(url: String) {
+            Glide.with(binding.root.context)
+                .load(url)
+                .into(binding.adImage)
         }
     }
 
