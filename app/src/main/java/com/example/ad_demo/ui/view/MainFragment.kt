@@ -4,14 +4,15 @@ import android.app.Activity
 import android.graphics.Insets
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.ad_demo.data.repository.AdRepositoryImpl
 import com.example.ad_demo.databinding.FragmentMainBinding
 import com.example.ad_demo.network.ApiService
@@ -19,6 +20,7 @@ import com.example.ad_demo.network.AppClientManager
 import com.example.ad_demo.ui.adapter.ItemAdapter
 import com.example.ad_demo.ui.viewmodel.MainViewModel
 import com.example.ad_demo.utils.Status
+import com.example.ad_sdk.AdSdk
 
 class MainFragment : Fragment() {
 
@@ -51,28 +53,14 @@ class MainFragment : Fragment() {
         binding.dataList.layoutManager = linearLayoutManager
         val adapter = ItemAdapter()
         binding.dataList.adapter = adapter
-        binding.dataList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                activity?.let { aty ->
-                    val v = linearLayoutManager.findViewByPosition(20)
-                    val rect = intArrayOf(0, 0)
-                    v?.getLocationOnScreen(rect)
-//                    Log.d(
-//                        "@@",
-//                        v?.measuredHeight.toString() + " view y:${rect[1]} height:${
-//                            getScreenHeight(aty)
-//                        }"
-//                    )
-                }
-            }
-        })
+
         with(adViewModel) {
             fetchNews().observe(viewLifecycleOwner) {
                 when (it.status) {
                     Status.SUCCESS -> {
                         binding.progressBar.visibility = View.GONE
                         adapter.submitList(it.data)
+                        AdSdk.init(activity as MainActivity, binding.dataList, 20)
                     }
 
                     Status.LOADING -> {
