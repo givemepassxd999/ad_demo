@@ -16,12 +16,13 @@ object AdSdk {
                 val adView = recyclerView.layoutManager?.findViewByPosition(position)
                 val rect = intArrayOf(0, 0)
                 adView?.getLocationOnScreen(rect)
-                Log.d(
-                    "@@",
-                    adView?.measuredHeight.toString() + " view y:${rect[1]} height:${
-                        getScreenHeight(activity)
-                    }"
-                )
+                adView?.let {
+                    if ((getScreenHeight(activity) - rect[1]) > (adView.measuredHeight / 2)) {
+                        Log.d("@@", "count timer start")
+                    } else {
+                        Log.d("@@", "count timer stop")
+                    }
+                }
             }
         })
     }
