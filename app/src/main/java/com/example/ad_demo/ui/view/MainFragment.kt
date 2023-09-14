@@ -1,16 +1,9 @@
 package com.example.ad_demo.ui.view
 
-import android.app.Activity
-import android.graphics.Insets
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.util.DisplayMetrics
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowInsets
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.ad_demo.data.repository.AdRepositoryImpl
@@ -20,7 +13,10 @@ import com.example.ad_demo.network.AppClientManager
 import com.example.ad_demo.ui.adapter.ItemAdapter
 import com.example.ad_demo.ui.viewmodel.MainViewModel
 import com.example.ad_demo.utils.Status
-import com.example.ad_sdk.AdSdk
+import com.example.ad_sdk.ad.AdData
+import com.example.ad_sdk.ad.AdLoader
+import com.example.ad_sdk.ad.OnAdListener
+import com.example.ad_sdk.ad.OnAdLoadedListener
 
 class MainFragment : Fragment() {
 
@@ -35,7 +31,6 @@ class MainFragment : Fragment() {
                 )
             )
         )
-
     }
 
     override fun onCreateView(
@@ -53,14 +48,29 @@ class MainFragment : Fragment() {
         binding.dataList.layoutManager = linearLayoutManager
         val adapter = ItemAdapter()
         binding.dataList.adapter = adapter
+        activity?.let { aty ->
+            AdLoader.Companion.Builder(activity = aty)
+                .init(binding.dataList, 20)
+                .forAd(object : OnAdLoadedListener {
+                    override fun onAdData(adData: AdData) {
+                        //update ad data to list
+                    }
 
+                })
+                .withAdListener(object : OnAdListener {
+                    override fun onAdImpression() {
+
+                    }
+
+                })
+                .build()
+        }
         with(adViewModel) {
             fetchNews().observe(viewLifecycleOwner) {
                 when (it.status) {
                     Status.SUCCESS -> {
                         binding.progressBar.visibility = View.GONE
                         adapter.submitList(it.data)
-                        AdSdk.init(activity as MainActivity, binding.dataList, 20)
                     }
 
                     Status.LOADING -> {
@@ -72,19 +82,6 @@ class MainFragment : Fragment() {
                     }
                 }
             }
-        }
-    }
-
-    private fun getScreenHeight(activity: Activity): Int {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val windowMetrics = activity.windowManager.currentWindowMetrics
-            val insets: Insets = windowMetrics.windowInsets
-                .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
-            windowMetrics.bounds.height() - insets.top - insets.bottom
-        } else {
-            val displayMetrics = DisplayMetrics()
-            activity.windowManager.defaultDisplay.getMetrics(displayMetrics)
-            displayMetrics.heightPixels
         }
     }
 
