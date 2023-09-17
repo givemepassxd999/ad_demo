@@ -50,7 +50,7 @@ class ItemAdapter : ListAdapter<ViewHolderType, RecyclerView.ViewHolder>(DiffCal
 
             AD -> {
                 (data as? ViewHolderType.Ad)?.let {
-                    (holder as? AdItemHolder)?.bind(data.url)
+                    (holder as? AdItemHolder)?.bind(data.adUrl)
                 }
             }
         }
@@ -94,7 +94,7 @@ class DiffCallback : DiffUtil.ItemCallback<ViewHolderType>() {
     override fun areContentsTheSame(oldItem: ViewHolderType, newItem: ViewHolderType): Boolean {
         (oldItem as? ViewHolderType.Ad)?.let { old ->
             (newItem as? ViewHolderType.Ad)?.let { new ->
-                return old.url == new.url
+                return old.adUrl == new.adUrl
             }
         }
         return false

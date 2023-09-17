@@ -1,6 +1,7 @@
 package com.example.ad_demo.ui.view
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +14,7 @@ import com.example.ad_demo.network.AppClientManager
 import com.example.ad_demo.ui.adapter.ItemAdapter
 import com.example.ad_demo.ui.viewmodel.MainViewModel
 import com.example.ad_demo.utils.Status
+import com.example.ad_demo.utils.ViewHolderType
 import com.example.ad_sdk.ad.AdData
 import com.example.ad_sdk.ad.AdLoader
 import com.example.ad_sdk.ad.OnAdListener
@@ -48,29 +50,36 @@ class MainFragment : Fragment() {
         binding.dataList.layoutManager = linearLayoutManager
         val adapter = ItemAdapter()
         binding.dataList.adapter = adapter
-        activity?.let { aty ->
-            AdLoader.Companion.Builder(activity = aty)
-                .init(binding.dataList, 20)
-                .forAd(object : OnAdLoadedListener {
-                    override fun onAdData(adData: AdData) {
-                        //update ad data to list
-                    }
-
-                })
-                .withAdListener(object : OnAdListener {
-                    override fun onAdImpression() {
-
-                    }
-
-                })
-                .build()
-        }
         with(adViewModel) {
             fetchNews().observe(viewLifecycleOwner) {
                 when (it.status) {
                     Status.SUCCESS -> {
+                        Log.d("@@", "api success")
                         binding.progressBar.visibility = View.GONE
-                        adapter.submitList(it.data)
+                        adapter.submitList(it.data) {
+                            activity?.let { aty ->
+                                AdLoader
+                                    .init(activity = aty, binding.dataList, 10)
+                                    .forAd(object : OnAdLoadedListener {
+                                        override fun onAdInitCompleted(adData: AdData) {
+                                            Log.d("@@", "onAdInitCompleted")
+                                            //you can create custom view in holder
+                                            list.add(
+                                                10,
+                                                ViewHolderType.Ad(adUrl = adData.adImageUrl)
+                                            )
+                                            adapter.submitList(list)
+                                        }
+
+                                    })
+                                    .withAdListener(object : OnAdListener {
+                                        override fun onAdImpression() {
+                                            Log.d("@@", "onAdImpression")
+                                        }
+
+                                    })
+                            }
+                        }
                     }
 
                     Status.LOADING -> {
