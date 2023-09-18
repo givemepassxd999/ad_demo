@@ -1,7 +1,6 @@
 package com.example.ad_sdk.ad
 
 import android.app.Activity
-import android.content.Context
 import android.graphics.Insets
 import android.os.Build
 import android.os.CountDownTimer
@@ -14,8 +13,9 @@ import androidx.recyclerview.widget.RecyclerView
 object AdLoader {
     private var onAdListener: OnAdListener? = null
     private var activity: FragmentActivity? = null
+    private var flag = false
     fun forAd(listener: OnAdLoadedListener): AdLoader {
-        val adData = AdData(1, "adName", "https://i.ytimg.com/vi/SMUas3cP2Q4/mqdefault.jpg")
+        val adData = AdData(1, "test", "https://i.ytimg.com/vi/SMUas3cP2Q4/mqdefault.jpg")
         listener.onAdInitCompleted(adData)
         return this
     }
@@ -38,7 +38,7 @@ object AdLoader {
                 adView?.getLocationOnScreen(rect)
                 adView?.let {
                     if ((getScreenHeight(activity) - rect[1]) > (adView.measuredHeight / 2)) {
-                        if (isTimerStart.not()) {
+                        if (isTimerStart.not().and(flag.not())) {
                             Log.d("@@", "count timer start")
                             isTimerStart = true
                             countDownTimer.start()
@@ -63,16 +63,13 @@ object AdLoader {
                         Log.d("@@", "impression")
                         onAdListener?.onAdImpression()
                         isTimerStart = false
+                        flag = true
                     }
                 }
                 return countDownTimer
             }
         })
         return this
-    }
-
-    private fun saveCount(){
-        val sharedPref = activity?.getPreferences(Context.MODE_PRIVATE)
     }
 
     private fun getScreenHeight(activity: Activity): Int {

@@ -13,6 +13,7 @@ import com.example.ad_demo.databinding.ContentItemBinding
 import com.example.ad_demo.utils.ViewHolderType
 import com.example.ad_demo.utils.ViewHolderType.Companion.AD
 import com.example.ad_demo.utils.ViewHolderType.Companion.CONTENT
+import com.example.ad_sdk.ad.AdData
 
 class ItemAdapter : ListAdapter<ViewHolderType, RecyclerView.ViewHolder>(DiffCallback()) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -50,12 +51,13 @@ class ItemAdapter : ListAdapter<ViewHolderType, RecyclerView.ViewHolder>(DiffCal
 
             AD -> {
                 (data as? ViewHolderType.Ad)?.let {
-                    (holder as? AdItemHolder)?.bind(data.adUrl)
+                    (holder as? AdItemHolder)?.bind(it.view, it.adData)
                 }
             }
         }
     }
 
+    inner class EmptyHolder(view: View) : RecyclerView.ViewHolder(view)
     inner class ContentItemHolder(
         private val binding: ContentItemBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
@@ -67,18 +69,21 @@ class ItemAdapter : ListAdapter<ViewHolderType, RecyclerView.ViewHolder>(DiffCal
     }
 
     inner class AdItemHolder(
-        private val binding: AdItemBinding,
-    ) : RecyclerView.ViewHolder(binding.root) {
+        private val adBinding: AdItemBinding,
+    ) : RecyclerView.ViewHolder(adBinding.root) {
 
         @SuppressLint("CheckResult", "SetTextI18n")
-        fun bind(url: String) {
-            Glide.with(binding.root.context)
-                .load(url)
-                .into(binding.adImage)
+        fun bind(view: View?, adData: AdData) {
+            Glide.with(itemView.context)
+                .load(adData.adImageUrl)
+                .into(adBinding.adImage)
+            view?.let {
+                (adBinding.root.parent as? ViewGroup)?.removeAllViews()
+                adBinding.adContainer.removeAllViews()
+                adBinding.adContainer.addView(view)
+            }
         }
     }
-
-    inner class EmptyHolder(view: View) : RecyclerView.ViewHolder(view)
 }
 
 class DiffCallback : DiffUtil.ItemCallback<ViewHolderType>() {
@@ -94,7 +99,7 @@ class DiffCallback : DiffUtil.ItemCallback<ViewHolderType>() {
     override fun areContentsTheSame(oldItem: ViewHolderType, newItem: ViewHolderType): Boolean {
         (oldItem as? ViewHolderType.Ad)?.let { old ->
             (newItem as? ViewHolderType.Ad)?.let { new ->
-                return old.adUrl == new.adUrl
+                return old.adData.adName == new.adData.adName
             }
         }
         return false
