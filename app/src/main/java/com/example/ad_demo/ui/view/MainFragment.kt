@@ -1,14 +1,15 @@
 package com.example.ad_demo.ui.view
 
+import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.ad_demo.R
 import com.example.ad_demo.data.repository.AdRepositoryImpl
 import com.example.ad_demo.databinding.CreateItemBinding
@@ -28,6 +29,8 @@ class MainFragment : Fragment() {
 
     private lateinit var fragmentMainBinding: FragmentMainBinding
     private lateinit var adViewModel: MainViewModel
+    private val adapter = ItemAdapter()
+    private val adList = arrayListOf<AdLoader>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         adViewModel = MainViewModel(
@@ -53,40 +56,18 @@ class MainFragment : Fragment() {
         with(fragmentMainBinding) {
             val linearLayoutManager = LinearLayoutManager(context)
             dataList.layoutManager = linearLayoutManager
-            val adapter = ItemAdapter()
             dataList.adapter = adapter
             with(adViewModel) {
                 fetchNews().observe(viewLifecycleOwner) {
                     when (it.status) {
                         Status.SUCCESS -> {
-                            Log.d("@@", "api success")
                             progressBar.visibility = View.GONE
                             adapter.submitList(it.data) {
                                 activity?.let { aty ->
-                                    AdLoader
-                                        .init(activity = aty, dataList, 20)
-                                        .forAd(object : OnAdLoadedListener {
-                                            override fun onAdInitCompleted(adData: AdData) {
-                                                Log.d("@@", "onAdInitCompleted")
-                                                //create custom view in holder
-                                                val v = createView()
-                                                val info = v.findViewById<TextView>(R.id.text_info)
-                                                info.text = adData.adName
-                                                info.setBackgroundColor(Color.RED)
-                                                list.add(
-                                                    20,
-                                                    ViewHolderType.Ad(v, adData)
-                                                )
-                                                adapter.submitList(list)
-                                            }
-
-                                        })
-                                        .withAdListener(object : OnAdListener {
-                                            override fun onAdImpression() {
-                                                Log.d("@@", "onAdImpression")
-                                            }
-
-                                        })
+                                    it.data?.let { list ->
+                                        adList.add(setAdLoader(activity = aty, dataList, list, 20))
+                                        adList.add(setAdLoader(activity = aty, dataList, list, 30))
+                                    }
                                 }
                             }
                         }
@@ -101,6 +82,45 @@ class MainFragment : Fragment() {
                     }
                 }
             }
+        }
+    }
+
+    private fun setAdLoader(
+        activity: Activity,
+        recyclerView: RecyclerView,
+        list: ArrayList<ViewHolderType>,
+        position: Int,
+    ): AdLoader {
+        val v = createView()
+        return AdLoader()
+            .init(activity, recyclerView, position)
+            .forAd(object : OnAdLoadedListener {
+                override fun onAdInitCompleted(adData: AdData) {
+                    //create custom view in holder
+
+                    val info = v.findViewById<TextView>(R.id.text_info)
+                    info.text = adData.adName
+                    info.setBackgroundColor(Color.RED)
+                    list.add(
+                        position,
+                        ViewHolderType.Ad(v, adData)
+                    )
+                    adapter.submitList(list)
+                }
+
+            })
+            .withAdListener(object : OnAdListener {
+                override fun onAdImpression() {
+                    //client handle impression event
+                }
+
+            })
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        adList.forEach {
+            it.release()
         }
     }
 

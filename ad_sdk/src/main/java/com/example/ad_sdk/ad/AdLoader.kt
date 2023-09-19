@@ -7,13 +7,15 @@ import android.os.CountDownTimer
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.WindowInsets
-import androidx.fragment.app.FragmentActivity
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 
-object AdLoader {
+class AdLoader {
     private var onAdListener: OnAdListener? = null
-    private var activity: FragmentActivity? = null
+    private var activity: Activity? = null
     private var flag = false
+    private var isTimerStart = false
+
     fun forAd(listener: OnAdLoadedListener): AdLoader {
         val adData = AdData(1, "test", "https://i.ytimg.com/vi/SMUas3cP2Q4/mqdefault.jpg")
         listener.onAdInitCompleted(adData)
@@ -25,15 +27,15 @@ object AdLoader {
         return this
     }
 
-    fun init(activity: FragmentActivity, recyclerView: RecyclerView, position: Int): AdLoader {
+    fun init(activity: Activity, recyclerView: RecyclerView, number: Int): AdLoader {
         this.activity = activity
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
 
             private var isTimerStart = false
-            private var countDownTimer = createTimer()
+            private var countDownTimer = createTimer(number)
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-                val adView = recyclerView.layoutManager?.findViewByPosition(position)
+                val adView = recyclerView.layoutManager?.findViewByPosition(number)
                 val rect = intArrayOf(0, 0)
                 adView?.getLocationOnScreen(rect)
                 adView?.let {
@@ -52,24 +54,34 @@ object AdLoader {
                     }
                 }
             }
-
-            private fun createTimer(): CountDownTimer {
-                val countDownTimer = object : CountDownTimer(1000, 1000) {
-                    override fun onTick(millisUntilFinished: Long) {
-                        Log.d("@@", "count timer onTick ${millisUntilFinished / 1000}")
-                    }
-
-                    override fun onFinish() {
-                        Log.d("@@", "impression")
-                        onAdListener?.onAdImpression()
-                        isTimerStart = false
-                        flag = true
-                    }
-                }
-                return countDownTimer
-            }
         })
         return this
+    }
+
+    private fun createTimer(number: Int): CountDownTimer {
+        val countDownTimer = object : CountDownTimer(1000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                //nothing to do
+            }
+
+            override fun onFinish() {
+                Toast.makeText(
+                    activity,
+                    "The No. $number AD is get reward",
+                    Toast.LENGTH_SHORT
+                )
+                    .show()
+                onAdListener?.onAdImpression()
+                isTimerStart = false
+                flag = true
+            }
+        }
+        return countDownTimer
+    }
+
+    fun release() {
+        onAdListener = null
+        activity = null
     }
 
     private fun getScreenHeight(activity: Activity): Int {

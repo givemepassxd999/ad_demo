@@ -1,6 +1,5 @@
 package com.example.ad_demo.ui.viewmodel
 
-import android.view.View
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.liveData
 import com.example.ad_demo.repo.AdRepository
@@ -12,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 class MainViewModel(
     private val adRepository: AdRepository
 ) : ViewModel() {
-    val list = arrayListOf<ViewHolderType>()
+    private val list = arrayListOf<ViewHolderType>()
     fun fetchNews() = liveData(Dispatchers.IO) {
         emit(Resource.loading(null))
         try {
